@@ -17,7 +17,7 @@
         <compilerSettings />
         <compilerArguments>
           <option name="destination" value="$MODULE_DIR$/build/classes/kotlin/main" />
-          <option name="classpath" value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk8/1.3.0/7157cc6bc26328e2e97723d65d4ed7d7eddf603b/kotlin-stdlib-jdk8-1.3.0.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.3.0/683e04a4e7f17437d7e1390480f312e122e42e9e/kotlin-stdlib-jdk7-1.3.0.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.0/a134b0cfe9bb44f98b0b3e889cda07923eea9428/kotlin-stdlib-1.3.0.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.0/84a2e0288dc17cd64d692eb1e5e0de8cd5ff0846/kotlin-stdlib-common-1.3.0.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar" />
+          <option name="classpath" value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin/1.3.10/42b81a170ecec48291b2e0d05c85ba7023a8ceb2/kotlin-gradle-plugin-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-api/1.3.10/789e227ff2e88bbdae3c1c3d24545e13440b6d2a/kotlin-gradle-plugin-api-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-model/1.3.10/33af5618a10c8a3ddc0d78d191f834927416e77f/kotlin-gradle-plugin-model-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-native-utils/1.3.10/4831f38bb190a3cf9ddcb1891a7c14513f637830/kotlin-native-utils-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-annotation-processing-gradle/1.3.10/b7066e042b3ff8209565ff6b0ee761fb5216e926/kotlin-annotation-processing-gradle-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-android-extensions/1.3.10/b714dd6deb5282a6545e4183d9270860a171f08e/kotlin-android-extensions-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-compiler-embeddable/1.3.10/adc9e577de39fba3db6d60662892118afedd713/kotlin-compiler-embeddable-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/1.3.10/dd02865be0351707554b16a896b766b2396cdafa/kotlin-reflect-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.10/b178c1501609c6e4ee8be635513cb023a466457d/kotlin-stdlib-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-compiler-runner/1.3.10/eeface883ce041a3b19181647d66e5316f8478bc/kotlin-compiler-runner-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-embeddable/1.3.10/e96a6125793c4ab0258119fcdce9d182f42d32b0/kotlin-scripting-compiler-embeddable-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.10/1b19d99229dcedad7caf50534dce38fe82845269/kotlin-stdlib-common-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/1.3.10/1d2bac36f99b84e1493244f12629bc0756a3ff90/kotlin-script-runtime-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-common/1.3.10/313eacf3836d79495b9b904cba243f65d895a0cd/kotlin-build-common-1.3.10.jar:/home/carson/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-daemon-client/1.3.10/536c858bdaf475bfdeaa3c6bba6a0fb197d61a7/kotlin-daemon-client-1.3.10.jar" />
           <option name="noStdlib" value="true" />
           <option name="noReflect" value="true" />
           <option name="moduleName" value="ChatApp" />
@@ -52,10 +52,21 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="Gradle: kotlin-stdlib-jdk8-1.3.0" level="project" />
-    <orderEntry type="library" exported="" name="Gradle: kotlin-stdlib-jdk7-1.3.0" level="project" />
-    <orderEntry type="library" exported="" name="Gradle: kotlin-stdlib-1.3.0" level="project" />
-    <orderEntry type="library" exported="" name="Gradle: kotlin-stdlib-common-1.3.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-gradle-plugin-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-gradle-plugin-api-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-gradle-plugin-model-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-native-utils-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-annotation-processing-gradle-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-android-extensions-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-compiler-embeddable-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-reflect-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-stdlib-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-compiler-runner-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-scripting-compiler-embeddable-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-stdlib-common-1.3.10" level="project" />
     <orderEntry type="library" exported="" name="Gradle: annotations-13.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-script-runtime-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-build-common-1.3.10" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: kotlin-daemon-client-1.3.10" level="project" />
   </component>
 </module>

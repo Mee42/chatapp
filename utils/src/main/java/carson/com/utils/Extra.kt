@@ -47,7 +47,7 @@ inline fun ByteArray.mapInPlace(mutator: (Byte) ->Byte) :ByteArray{
     return copy
 }
 
-inline fun ByteArray.xor(other :ByteArray) :ByteArray {
+fun ByteArray.xor(other :ByteArray) :ByteArray {
     if(other.size != this.size)
         throw IndexOutOfBoundsException("Attempting to combine an array of ${this.size} bytes and ${other.size}")
     val copy = this.copyOf()
