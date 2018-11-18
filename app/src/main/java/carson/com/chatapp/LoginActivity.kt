@@ -42,8 +42,8 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_test)
-        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-        StrictMode.setThreadPolicy(policy)
+//        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+//        StrictMode.setThreadPolicy(policy)
         startTest(this)
         if(true)
             return
