@@ -1,50 +1,36 @@
-package carson.com.chatapp
+package carson.com.chatapp.activities
 
+import android.accounts.NetworkErrorException
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.annotation.TargetApi
-import android.content.pm.PackageManager
-import android.support.design.widget.Snackbar
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
-import android.app.LoaderManager.LoaderCallbacks
-import android.content.CursorLoader
-import android.content.Loader
-import android.database.Cursor
-import android.net.Uri
 import android.os.AsyncTask
-import android.os.Build
 import android.os.Bundle
-import android.provider.ContactsContract
 import android.text.TextUtils
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.ArrayAdapter
 import android.widget.TextView
 
-import java.util.ArrayList
-import android.Manifest.permission.READ_CONTACTS
+import carson.com.chatapp.*
+import carson.com.utils.hash
 
 import kotlinx.android.synthetic.main.activity_login.*
-import android.os.StrictMode
-
+import java.util.concurrent.TimeUnit
 
 
 /**
  * A login screen that offers login via email/password.
  */
-class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
-    /**
-     * Keep track of the login task to ensure we can cancel it if requested.
-     */
-    private var mAuthTask: UserLoginTask? = null
+class LoginActivity : AppCompatActivity() {
+
+    var mAuthTask :UserLoginTask? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
         setContentView(R.layout.activity_login)
         // Set up the login form.
-        populateAutoComplete()
         password.setOnEditorActionListener(TextView.OnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
                 attemptLogin()
@@ -55,12 +41,6 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
         email_sign_in_button.setOnClickListener { attemptLogin() }
     }
 
-    private fun populateAutoComplete() {
-        loaderManager.initLoader(0, null, this)
-    }
-
-
-
 
     /**
      * Attempts to sign in or register the account specified by the login form.
@@ -68,10 +48,8 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
      * errors are presented and no actual login attempt is made.
      */
     private fun attemptLogin() {
-        if (mAuthTask != null) {
+        if(mAuthTask != null)
             return
-        }
-
         // Reset errors.
         email.error = null
         password.error = null
@@ -108,9 +86,10 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
+//            println("starting background")
             showProgress(true)
             mAuthTask = UserLoginTask(emailStr, passwordStr)
-            mAuthTask!!.execute(null as Void?)
+            mAuthTask!!.execute()
         }
     }
 
@@ -124,7 +103,7 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
     private fun showProgress(show: Boolean) {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
+        // the progress spinnerexecuteOnExecutor.
         val shortAnimTime = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
 
         login_form.visibility = if (show) View.GONE else View.VISIBLE
@@ -146,90 +125,74 @@ class LoginActivity : AppCompatActivity(), LoaderCallbacks<Cursor> {
                     login_progress.visibility = if (show) View.VISIBLE else View.GONE
                 }
             })
-
     }
 
-    override fun onCreateLoader(i: Int, bundle: Bundle?): Loader<Cursor> {
-        return CursorLoader(
-            this,
-            // Retrieve data rows for the device user's 'profile' contact.
-            Uri.withAppendedPath(
-                ContactsContract.Profile.CONTENT_URI,
-                ContactsContract.Contacts.Data.CONTENT_DIRECTORY
-            ), ProfileQuery.PROJECTION,
-
-            // Select only email addresses.
-            ContactsContract.Contacts.Data.MIMETYPE + " = ?", arrayOf(
-                ContactsContract.CommonDataKinds.Email
-                    .CONTENT_ITEM_TYPE
-            ),
-
-            // Show primary email addresses first. Note that there won't be
-            // a primary email address if the user hasn't specified one.
-            ContactsContract.Contacts.Data.IS_PRIMARY + " DESC"
-        )
-    }
-
-    override fun onLoadFinished(cursorLoader: Loader<Cursor>, cursor: Cursor) {
-        val emails = ArrayList<String>()
-        cursor.moveToFirst()
-        while (!cursor.isAfterLast) {
-            emails.add(cursor.getString(ProfileQuery.ADDRESS))
-            cursor.moveToNext()
-        }
-
-        addEmailsToAutoComplete(emails)
-    }
-
-    override fun onLoaderReset(cursorLoader: Loader<Cursor>) {
-
-    }
-
-    private fun addEmailsToAutoComplete(emailAddressCollection: List<String>) {
-        //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
-        val adapter = ArrayAdapter(
-            this@LoginActivity,
-            android.R.layout.simple_dropdown_item_1line, emailAddressCollection
-        )
-
-        email.setAdapter(adapter)
-    }
-
-    object ProfileQuery {
-        val PROJECTION = arrayOf(
-            ContactsContract.CommonDataKinds.Email.ADDRESS,
-            ContactsContract.CommonDataKinds.Email.IS_PRIMARY
-        )
-        val ADDRESS = 0
-        val IS_PRIMARY = 1
+    enum class Thing{
+        USERNAME,PASSWORD
     }
 
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    inner class UserLoginTask internal constructor(private val mEmail: String, private val mPassword: String) :
-        AsyncTask<Void, Void, Boolean>() {
-
-        override fun doInBackground(vararg params: Void): Boolean? {
-            return true
+    inner class UserLoginTask internal constructor(private val username: String, private val mPassword: String) :
+        AsyncTask<Void, Void, Pair<Boolean, Pair<Thing,String>>>() {
+        override fun doInBackground(vararg params: Void?): Pair<Boolean, Pair<Thing,String>> {
+//            println("starting login task")
+            if (!data.checkIfDone()) {
+//                println("is not done")
+                //is not done
+                if(!data.hangTillReturn(10 * 1000))
+                    throw NetworkErrorException("Timed out on start get")
+            }
+            //we can now assume that it has complected
+            //check to see if the user exists
+            //should block
+            val checkIfExists = String(AsyncPost().doInBackground("/account/exists/$username"))
+            if (checkIfExists == "true" || checkIfExists == "false") {
+                if (checkIfExists == "false") {
+                    return Pair(false, Pair(Thing.USERNAME,"user not found"))
+                }//else, continue the program
+            } else {
+                throw NetworkErrorException("Could not check if user exists, got:$checkIfExists")
+            }
+            //get salt
+            val salt = AsyncEncryptedPost(key = data.getKey()).doInBackground("/account/salt/${data.id}/$username")
+            val hash = (mPassword.toByteArray() + salt).hash()
+            val attemptLogin = AsyncEncryptedPost(hash, data.getKey())
+            val string = String(attemptLogin.doInBackground("/account/check/${data.id}/$username"))
+//            val string = String(attemptLogin.get(10, TimeUnit.SECONDS))
+            if (!(string == "true" || string == "false")) {
+                throw NetworkErrorException("Could not check if user exists, got:$checkIfExists")
+            }
+            if(string == "true"){
+                return Pair(true, Pair(Thing.PASSWORD,"success"))
+            }else{
+                return Pair(false, Pair(Thing.PASSWORD,"incorrect password"))
+            }
         }
 
-        override fun onPostExecute(success: Boolean?) {
+        override fun onPostExecute(pair: Pair<Boolean, Pair<Thing,String>>?) {
             mAuthTask = null
             showProgress(false)
-
-            if (success!!) {
-                finish()
-            } else {
-                password.error = getString(R.string.error_incorrect_password)
-                password.requestFocus()
+            if(pair != null) {
+                if(!pair.first){
+                    if(pair.second.first == Thing.USERNAME)
+                        email.error = pair.second.second
+                    else
+                        password.error = pair.second.second
+                }else {
+                    val intent = Intent(baseContext,TestLoggedInActivity::class.java)
+                    startActivity(intent)
+                }
             }
+//            println("onPostExecute:${pair?.first}  :  ${pair?.second}")
         }
 
         override fun onCancelled() {
             mAuthTask = null
             showProgress(false)
+//            println("onCancelled")
         }
     }
 

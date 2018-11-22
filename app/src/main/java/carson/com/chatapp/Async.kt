@@ -10,47 +10,57 @@ import okhttp3.RequestBody
 import java.util.concurrent.TimeUnit
 
 
-class AsyncGetEncryptionKey : AsyncTask<Unit, Int, ByteArray>(){
-    override fun doInBackground(vararg params: Unit?): ByteArray {
+class AsyncGetEncryptionKey(val end :() -> Unit = {}) : AsyncTask<Unit, Unit, Pair<Int,ByteArray>>(){
+    override fun doInBackground(vararg params: Unit?): Pair<Int,ByteArray> {
         val pad = ByteArray(keySize) { 0 }//Should be the same size as the key
         random.nextBytes(pad)
         //get an id
-        val idReq = AsyncPost().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"/start/id")
-        val id = Integer.parseInt(String(idReq.get()))
+        val idReq = AsyncPost().doInBackground("/start/id")
+
+        val id = Integer.parseInt(String(idReq))
         //gets S(k)
-        var encryptedKey = AsyncPost().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"/start/$id/one").get()
+        var encryptedKey = AsyncPost().doInBackground("/start/$id/one")
         //turn into C(S(k))
         encryptedKey = encryptedKey.combine(pad)
         //send C(S(k)) to the server and get C(k)
-        encryptedKey = AsyncPost(encryptedKey).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"/start/$id/two").get()
+        encryptedKey = AsyncPost(encryptedKey).doInBackground("/start/$id/two")
+
         val key = encryptedKey.combine(pad)
         //attempt to verify key
 
-        val randomBytes = ByteArray(2048) {Math.random().toByte()}
-        val returnBytes = AsyncEncryptedPost(randomBytes,key).execute("/start/").get()
-        val decryptedRandomBytes = randomBytes.AESdecrypt(key)
-        if(!decryptedRandomBytes.contentEquals(returnBytes)){
+        val randomBytes = ByteArray(16) { 0 }
+        val returnBytes = AsyncEncryptedPost(randomBytes,key).doInBackground("/start/$id/test")
+        if(!(randomBytes + ByteArray(1) {0}).contentEquals(returnBytes)){
             throw SecurityException("attempt to verify key failed")
         }
-        return key
+        return Pair(id,key)
     }
 
+    override fun onPostExecute(result: Pair<Int, ByteArray>?) {
+        super.onPostExecute(result)
+        end.invoke()
+    }
 }
 
 class AsyncEncryptedPost(private val body :ByteArray = ByteArray(0), val key :ByteArray) : AsyncTask<String, Void, ByteArray>(){
-    override fun doInBackground(vararg params: String?): ByteArray {
+    public override fun doInBackground(vararg params: String?): ByteArray {
         val request = Request.Builder()
             .url(url + params[0])
             .post(RequestBody.create(null,body.AESencrypt(key)))
             .build()
         val response = client.newCall(request).execute()
-        return response.body()?.bytes()?.AESdecrypt(key) ?: throw NetworkErrorException()
+
+//        println("response:${response.body()?.string()}")
+        if(!response.isSuccessful)
+            throw NetworkErrorException("got:${response.code()} body:${response.body()?.string()} at path: $url${params[0]}")
+        val resultBody = response.body()?.bytes() ?: throw NetworkErrorException()
+        return resultBody.AESdecrypt(key)
     }
 }
 
 
 class  AsyncPost(private val body :ByteArray = ByteArray(0)) : AsyncTask<String, Void, ByteArray>(){
-    override fun doInBackground(vararg params: String?): ByteArray {
+    public override fun doInBackground(vararg params: String?): ByteArray {
         val request = Request.Builder()
             .url(url + params[0])
             .post(RequestBody.create(null,body))
@@ -61,23 +71,34 @@ class  AsyncPost(private val body :ByteArray = ByteArray(0)) : AsyncTask<String,
 }
 
 var keySize = -1
-    get(){
-        if(field == -1){
-            println("getting key size")
-            field = AsyncGetKeySize().execute().get(5000, TimeUnit.MILLISECONDS) ?: throw NetworkErrorException("timed out on get")
-        }
-        return field
+get(){
+    if(field == -1){
+        return getKeySizeNetworked()
     }
+    return field
+}
 
-class AsyncGetKeySize : AsyncTask<Void, Void, Int>(){
-    override fun doInBackground(vararg params: Void?): Int {
-        val request = Request.Builder()
-            .url("$url/start/key_size")
-            .get()
-            .build()
-        val execute = client.newCall(request).execute()
-        val body = execute.body()?.string() ?: "*an invalid integer*"
-        return Integer.parseInt(body)
+class AsyncInitKey() :AsyncTask<Unit,Unit,Unit>(){
+    override fun doInBackground(vararg params: Unit?){
+        keySize
     }
+}
+/*
+decrypting����}6��dR��L=�  :  {-91, -107, -101, -93, 125, 14, 54, -79, -103, 100, 82, -67, -18, 76, 61, -95}
+got:����}6��dR��L=�  :  {-91, -107, -101, -93, 125, 14, 54, -79, -103, 100, 82, -67, -18, 76, 61, -95}}
+decrypting����}6��dR��L=�  :  {-91, -107, -101, -93, 125, 14, 54, -79, -103, 100, 82, -67, -18, 76, 61, -95}
+ */
 
+fun getKeySizeNetworked() :Int {
+    //println(("GETTING KEY")
+    val request = Request.Builder()
+        .url("$url/start/key_size")
+        .get()
+        .build()
+    val execute = client.newCall(request).execute()
+    val body = execute.body()?.string() ?: "*an invalid integer*"
+    //println(("GOT KEY")
+    val size = Integer.parseInt(body)
+    keySize = size
+    return size
 }

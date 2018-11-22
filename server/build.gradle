@@ -4,6 +4,10 @@ apply plugin: 'kotlin'
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.sparkjava:spark-kotlin:1.0.0-alpha'
+
+    compile "org.slf4j:slf4j-api:1.7.25"
+    compile "org.slf4j:slf4j-simple:1.7.25"
+
     implementation project(':utils')
 }
 

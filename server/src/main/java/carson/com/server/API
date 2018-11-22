@@ -1,0 +1,15 @@
+/- "Hello, world"
+|
+|
+|
+|------/start
+|      |-/key_size : get the key size (currently 32 bytes)
+|      |-/id       : register an id. used for the rest of /start
+|      |-/:id/one  : generates a ProtocolSession for the :id, returns S(k)
+|      |-/:id/two  : takes in C(S(k)), returns C(k)
+|      |-/:id/test : returns the unencrypted version of the passed Array<Byte>
+|
+|------/account
+|      |-/exists/:username    : check if the user exists. returns a string boolean UNENCRYPTED
+|      |-/salt/:id/:username  : returns the salt of the user. This should be okay...?
+|      |-/check/:id/:username : pass the password hash, returns a string boolean

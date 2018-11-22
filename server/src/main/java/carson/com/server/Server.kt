@@ -7,7 +7,7 @@ import java.util.*
 
 val random = Random()//change to SecureRandom
 
-const val size = 128
+const val size = 16
 
 class Server (port :Int){
     val data = Data()
@@ -21,7 +21,10 @@ class Server (port :Int){
             /*
             https://en.wikipedia.org/wiki/Three-pass_protocol
              */
-            get("/key_size"){_,_-> size}
+            get("/key_size"){_,_->
+                println("returning size: $size")
+                size
+            }
             post("/id") {_,_ ->
                 println("giving id:$index1")
                 return@post index1++
@@ -41,14 +44,13 @@ class Server (port :Int){
                 random.nextBytes(pad)
                 random.nextBytes(key)
                 println("generating key:${key.decode()}")
-
                 val session = ProtocolSession(pad, key, id!!)
                 data.protocolSessions.add(session)
                 val post = key.combine(pad)
                 post
             }//one
             post("/:id/two") {req,_ ->//gets C(S(k)), returns C(k)
-                var id = data.getIdSpark(req.params("id"))
+                var id = data.Sparky().getId(req.params("id"))
 
                 if(!data.protocolSessions.any { it.id == id }){
                     halt(400,"id not registered")
@@ -59,25 +61,54 @@ class Server (port :Int){
                 }
                 data.protocolSessions.removeIf { it == session }
                 data.sessions+=Session(session!!.key, id)
+                println("/:id/two called")
                 req.bodyAsBytes().combine(session!!.pad)
             }//two
             post("/:id/test"){req, _ ->
-                val session = data.getSessionSpark(req.params("id"))
-                val bytes = req.bodyAsBytes()
-                return@post bytes.AESdecrypt(session.key)
+                val session = data.Sparky().getSession(data.Sparky().getId(req))
+                val bytes = req.bodyAsBytes().AESdecrypt(session.key)
+                println("/:id/test called")
+                (bytes + ByteArray(1) { 0 }).AESencryptChecked(session.key)
+                return@post (bytes + ByteArray(1) { 0 }).AESencrypt(session.key)
             }//returns the decrypted body
 
         }//start
 
-
-        get("/test"){_,_->
-            val id = 12;
-            val session = data.protocolSessions.find { it.id == id }
-            if(session == null) {
-                halt(500, "could not find session")
+        path("/account") {
+            post("/exists/:username") {req,_ ->
+                data.getUser(req) != null
             }
-            return@get Session(session!!.key,id)
-        }
+
+            post("/salt/:id/:username"){req,_ ->
+                val user = data.getUser(req)
+                if(user == null) {
+                    halt(400, "User not found");return@post ""
+                }
+                user.passwordSalt.AESencrypt(data.Sparky().getSession(req).key)
+            }
+
+            post("/check/:id/:username") {req,_ ->
+                println("check:")
+                var body = req.bodyAsBytes()
+                val id = data.Sparky().getId(req)
+                val session = data.Sparky().getSession(id)
+                val user = data.getUser(req)
+                if(user == null){
+                    println("user not found:404")
+                    halt(400,"could not find user with that username");return@post ""
+                }
+                body = body.AESdecrypt(session.key)
+                //the body should be the hashString
+                if(body.contentEquals(user.passwordHash)){
+                    println("password correct${"true".toByteArray().AESencrypt(session.key).decode()}")
+                    return@post "true".toByteArray().AESencrypt(session.key)
+                }
+                println("password incorrect${"false".toByteArray().AESencrypt(session.key).decode()}")
+                return@post "false".toByteArray().AESencrypt(session.key)
+            }
+        }//account
+
+        data.users+=User("bob","pass".toByteArray())
 
 
     }//init
@@ -85,3 +116,9 @@ class Server (port :Int){
 }
 
 
+/*
+{-74, -94, 36, 29, -56, 124, 47, 62, 35, 127, -111, 15, -33, -108, 2, 42}
+{-74, -94, 36, 29, -56, 124, 47, 62, 35, 127, -111, 15, -33, -108, 2, 42}
+{-74, -94, 36, 29, -56, 124, 47, 62, 35, 127, -111, 15, -33, -108, 2, 42}
+
+ */

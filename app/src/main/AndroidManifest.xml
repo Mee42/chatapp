@@ -12,14 +12,17 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity
-                android:name=".LoginActivity"
+                android:name=".activities.LoginActivity"
                 android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
+                <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name=".activities.ErrorActivity"/>
+        <activity android:name=".activities.TestLoggedInActivity"/>
+
     </application>
 
 </manifest>
