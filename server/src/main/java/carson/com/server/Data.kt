@@ -79,6 +79,7 @@ class User {
         random.nextBytes(passwordSalt)
         this.passwordHash = (password + passwordSalt).hash()
     }
+
 }
 
 var index1 = 0

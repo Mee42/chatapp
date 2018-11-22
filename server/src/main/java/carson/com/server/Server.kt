@@ -92,14 +92,13 @@ class Server (port :Int){
                 var body = req.bodyAsBytes()
                 val id = data.Sparky().getId(req)
                 val session = data.Sparky().getSession(id)
-                val user = data.getUser(req)
+                val user:User? = data.getUser(req)
                 if(user == null){
-                    println("user not found:404")
-                    halt(400,"could not find user with that username");return@post ""
+                    halt(400,"could not find user with that username");
                 }
                 body = body.AESdecrypt(session.key)
                 //the body should be the hashString
-                if(body.contentEquals(user.passwordHash)){
+                if(body.contentEquals(user!!.passwordHash)){
                     println("password correct${"true".toByteArray().AESencrypt(session.key).decode()}")
                     return@post "true".toByteArray().AESencrypt(session.key)
                 }
@@ -114,11 +113,3 @@ class Server (port :Int){
     }//init
 
 }
-
-
-/*
-{-74, -94, 36, 29, -56, 124, 47, 62, 35, 127, -111, 15, -33, -108, 2, 42}
-{-74, -94, 36, 29, -56, 124, 47, 62, 35, 127, -111, 15, -33, -108, 2, 42}
-{-74, -94, 36, 29, -56, 124, 47, 62, 35, 127, -111, 15, -33, -108, 2, 42}
-
- */
