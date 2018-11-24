@@ -1,21 +1,21 @@
 package carson.com.server
 
-import carson.com.utils.decode
 import carson.com.utils.hash
-import com.mongodb.client.MongoClients
+import com.mongodb.MongoClientSettings
 import com.mongodb.MongoCredential
 import com.mongodb.ServerAddress
-import com.mongodb.MongoClientSettings
 import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
+import com.mongodb.client.model.Filters.*
 import org.bson.Document
 import org.bson.types.Binary
+import spark.Request
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.util.*
-import com.mongodb.client.model.Filters.all
-import spark.Request
+
 
 private fun getClient(name :String, password :String)= MongoClients.create(
     MongoClientSettings.builder()
@@ -36,26 +36,39 @@ private fun getClient() :MongoClient{
 
 //singleton
 private var mongo :MongoClient? = null
-public fun getMongoClient() :MongoClient{
+fun getMongoClient() :MongoClient{
     if(mongo === null)
         mongo = getClient()
     return mongo!!
 }
 
-public fun getDatabase() = getMongoClient().getDatabase("chat")
+fun getDatabase() = getMongoClient().getDatabase("chat")
 
 //interface for getting immutable data from the database
-fun getUser(username :String?) :User?{
+fun getUser(id :Long?) :User?{
     val db = getDatabase().getCollection("users")
-    val doc = db[username ?: return null]
+    val doc = db[id ?: return null]
     return if(doc == null) null else User(doc)
 }
-fun getUser(req :Request) :User? = getUser(req.params("username"))
+fun getUser(req :Request) :User? = getUser(req.params("user_id")?.toLong())
 
-fun createUser(username :String, password :ByteArray) :User{
+fun createUser(username :String, email:String, password :ByteArray) :User{
     val passwordSalt = ByteArray(128) { 0 }
     random.nextBytes(passwordSalt)
-    return User(username, (password + passwordSalt).hash(), passwordSalt)
+    return User(generateId(),email,username, (password + passwordSalt).hash(), passwordSalt)
+}
+
+fun generateId(): Long {
+    val etc = getDatabase().getCollection("etc")
+    var doc = etc.find(all("_id", "snowflake")).first()
+    if(doc == null) {
+        doc = Document().append("_id", "snowflake").append("value", 10000L)
+        etc.insertOne(doc)
+    }
+    val snowflake = doc["value"] as Long + 1
+    doc.append("value",snowflake)
+    etc.replaceOne(all("_id",doc["_id"]),doc)
+    return snowflake
 }
 
 /**
@@ -63,7 +76,7 @@ fun createUser(username :String, password :ByteArray) :User{
  */
 fun putOrReplaceUser(user :User) :Boolean{
     val users = getDatabase().getCollection("users")
-    if(users.findOneAndReplace(all("_id",user.username),user.toDocument()) == null){
+    if(users.findOneAndReplace(all("_id",user.id),user.toDocument()) == null){
         //if it is null (user is new and not replaced), make a new one
         users.insertOne(user.toDocument())
         return false

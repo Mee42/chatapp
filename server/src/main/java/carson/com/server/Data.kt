@@ -53,16 +53,22 @@ class Data{
             }
             return Session.NULL
         }
-
-
     }
-
 
 }
 
-data class User(val username: String,val passwordHash: ByteArray,val passwordSalt: ByteArray) {
+data class User(val id :Long, val email :String,val username: String,val passwordHash: ByteArray,val passwordSalt: ByteArray) {
 
-    constructor(doc: Document) : this(doc["_id"] as String, doc.getBytes("hash"), doc.getBytes("salt"))
+    constructor(doc: Document) : this(doc["_id"] as Long,doc["email"] as String,doc["username"] as String, doc.getBytes("hash"), doc.getBytes("salt"))
+
+    fun toDocument(): Document {
+        return Document()
+            .append("_id",id)
+            .append("email",email)
+            .append("username",username)
+            .append("hash",passwordHash)
+            .append("salt",passwordSalt)
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -70,6 +76,8 @@ data class User(val username: String,val passwordHash: ByteArray,val passwordSal
 
         other as User
 
+        if (id != other.id) return false
+        if (email != other.email) return false
         if (username != other.username) return false
         if (!passwordHash.contentEquals(other.passwordHash)) return false
         if (!passwordSalt.contentEquals(other.passwordSalt)) return false
@@ -78,17 +86,12 @@ data class User(val username: String,val passwordHash: ByteArray,val passwordSal
     }
 
     override fun hashCode(): Int {
-        var result = username.hashCode()
+        var result = id.hashCode()
+        result = 31 * result + email.hashCode()
+        result = 31 * result + username.hashCode()
         result = 31 * result + passwordHash.contentHashCode()
         result = 31 * result + passwordSalt.contentHashCode()
         return result
-    }
-
-    fun toDocument(): Document {
-        return Document()
-            .append("_id",username)
-            .append("hash",passwordHash)
-            .append("salt",passwordSalt)
     }
 }
 

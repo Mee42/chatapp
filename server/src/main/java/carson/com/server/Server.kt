@@ -1,6 +1,7 @@
 package carson.com.server
 
 import carson.com.utils.*
+import com.mongodb.client.model.Filters
 import spark.Spark.*
 import java.lang.NumberFormatException
 import java.util.*
@@ -75,11 +76,22 @@ class Server (port :Int){
         }//start
 
         path("/account") {
-            post("/exists/:username") {req,_ ->
+
+            get("/id_for_email/:email") {req,_ ->
+                getDatabase().getCollection("users").find(Filters.all("email",req.params("username"))).toList()
+                    .flatMap { listOf(it.getID()) }.fold("") {all,one-> "$all,$one"}.substring(1)//substring to remove the initial comma
+            }
+            get("/id_for_username/:username") {req,_ ->
+                getDatabase().getCollection("users").find(Filters.all("username",req.params("username"))).toList()
+                    .flatMap { listOf(it.getID()) }.fold("") {all,one-> "$all,$one"}.substring(1)//substring to remove the initial comma
+            }
+
+
+            get("/exists/:user_id") {req,_ ->
                 getUser(req) != null
             }
 
-            post("/salt/:id/:username"){req,_ ->
+            post("/salt/:id/:user_id"){req,_ ->
                 val user = getUser(req)
                 if(user == null) {
                     halt(400, "User not found");return@post ""
@@ -87,22 +99,20 @@ class Server (port :Int){
                 user.passwordSalt.AESencrypt(data.Sparky().getSession(req).key)
             }
 
-            post("/check/:id/:username") {req,_ ->
+            post("/check/:id/:user_id") {req,_ ->
                 println("check:")
                 var body = req.bodyAsBytes()
                 val id = data.Sparky().getId(req)
                 val session = data.Sparky().getSession(id)
-                val user:User? = getUser(req.params("username"))
+                val user:User? = getUser(req)
                 if(user == null){
                     halt(400,"could not find user with that username");
                 }
                 body = body.AESdecrypt(session.key)
                 //the body should be the hashString
                 if(body.contentEquals(user!!.passwordHash)){
-                    println("password correct${"true".toByteArray().AESencrypt(session.key).decode()}")
                     return@post "true".toByteArray().AESencrypt(session.key)
                 }
-                println("password incorrect${"false".toByteArray().AESencrypt(session.key).decode()}")
                 return@post "false".toByteArray().AESencrypt(session.key)
             }
         }//account

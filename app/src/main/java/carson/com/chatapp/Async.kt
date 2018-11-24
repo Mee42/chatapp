@@ -69,6 +69,16 @@ class  AsyncPost(private val body :ByteArray = ByteArray(0)) : AsyncTask<String,
         return response.body()?.bytes() ?: throw NetworkErrorException()
     }
 }
+class  AsyncGet : AsyncTask<String, Void, ByteArray>(){
+    public override fun doInBackground(vararg params: String?): ByteArray {
+        val request = Request.Builder()
+            .url(url + params[0])
+            .get()
+            .build()
+        val response = client.newCall(request).execute()
+        return response.body()?.bytes() ?: throw NetworkErrorException()
+    }
+}
 
 var keySize = -1
 get(){

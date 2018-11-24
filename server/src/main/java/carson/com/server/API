@@ -3,13 +3,15 @@
 |
 |
 |------/start
-|      |-/key_size : get the key size (currently 32 bytes)
-|      |-/id       : register an id. used for the rest of /start
-|      |-/:id/one  : generates a ProtocolSession for the :id, returns S(k)
-|      |-/:id/two  : takes in C(S(k)), returns C(k)
-|      |-/:id/test : returns the unencrypted version of the passed Array<Byte>
+|      |-/key_size : get the key size (currently 32 bytes) GET
+|      |-/id       : register an id. used for the rest of /start POST
+|      |-/:id/one  : generates a ProtocolSession for the :id, returns S(k) POST
+|      |-/:id/two  : takes in C(S(k)), returns C(k) POST
+|      |-/:id/test : returns the unencrypted version of the passed Array<Byte> POST
 |
 |------/account
-|      |-/exists/:username    : check if the user exists. returns a string boolean UNENCRYPTED
-|      |-/salt/:id/:username  : returns the salt of the user. This should be okay...?
-|      |-/check/:id/:username : pass the password hash, returns a string boolean
+|      |-/id_for_email/:email       : returns a comma dilimated list of user id's associated with :email GET
+|      |-/id_for_username/:username : returns a comma dilimated list of user id's associated with :username GET
+|      |-/exists/:user_id           : check if the user exists. returns a string boolean UNENCRYPTED GET
+|      |-/salt/:id/:user_id         : returns the salt of the user. This should be okay...? POST
+|      |-/check/:id/:user_id        : pass the password hash, returns a string boolean POST

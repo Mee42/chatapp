@@ -41,10 +41,10 @@ class Logger { companion object {
      * For network stuff
      * Ex: Unable to connect the server
      */
-    fun network(string: String,exception: Throwable? = null) = log(NetworkLevel.NETWORK,string,exception)
+    fun network(string: String = NETWORK_EXCEPTION,exception: Throwable? = null) = log(NetworkLevel.NETWORK,string,exception)
     /**
-     * Something that should be noted, but is not necessarily a problem. If everything runs perfectly, this should probably not be shown
-     * Ex: not sure yet
+     * For problems cause by the user:
+     * Ex: empty password field
      */
     fun info(string: String,exception: Throwable? = null) = log(Level.INFO,string,exception)
 

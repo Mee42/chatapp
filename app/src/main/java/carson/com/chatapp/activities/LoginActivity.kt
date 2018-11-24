@@ -19,7 +19,7 @@ import kotlinx.android.synthetic.main.activity_login.*
 
 
 /**
- * A login screen that offers login via email/password.
+ * A login screen that offers login via username/password.
  */
 class LoginActivity : AppCompatActivity() {
 
@@ -32,64 +32,58 @@ class LoginActivity : AppCompatActivity() {
         Logger.fine("switched content view")
         // Set up the login form.
         password.setOnEditorActionListener(TextView.OnEditorActionListener { _, id, _ ->
+            Logger.fine("password on-edit called")
             if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
                 attemptLogin()
                 return@OnEditorActionListener true
             }
             false
         })
-        Logger.fine("set password listener")
-        email_sign_in_button.setOnClickListener { attemptLogin() }
-        Logger.fine("set on click listener")
+        Logger.finer("set password listener")
+        username_sign_in_button.setOnClickListener { attemptLogin() }
+        Logger.finer("set on click listener")
         Logger.fine("Finished onCreate")
-        Logger.severe("ERROROROROR", exception = Exception())
-        Logger.finest("network exception at 123", exception = NetworkErrorException(NETWORK_EXCEPTION + NETWORK_EXCEPTION + NETWORK_EXCEPTION))
-
-    }
-
-    override fun onStart() {
-        super.onStart()
-        crash(this)
     }
 
     /**
      * Attempts to sign in or register the account specified by the login form.
-     * If there are form errors (invalid email, missing fields, etc.), the
+     * If there are form errors (invalid username, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
     private fun attemptLogin() {
-        if(mAuthTask != null)
+        Logger.fine("attempting login")
+        if(mAuthTask != null) {
+            Logger.warning("A login attempt in in progress, or mAuthTask is unnessesarraly non-null. status: ${mAuthTask!!.status}")
             return
+        }
         // Reset errors.
-        email.error = null
+        username.error = null
         password.error = null
 
         // Store values at the time of the login attempt.
-        val emailStr = email.text.toString()
+        val usernameStr = username.text.toString()
         val passwordStr = password.text.toString()
 
         var cancel = false
         var focusView: View? = null
 
         // Check for a valid password, if the user entered one.
-        if (!isPasswordValid(passwordStr)) {
-            password.error = getString(R.string.error_invalid_password)
+
+        if(TextUtils.isEmpty(passwordStr)) {
+            password.error = getString(R.string.error_field_required)
             focusView = password
             cancel = true
         }
 
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(emailStr)) {
-            email.error = getString(R.string.error_field_required)
-            focusView = email
-            cancel = true
-        } else if (!isEmailValid(emailStr)) {
-            email.error = getString(R.string.error_invalid_email)
-            focusView = email
+        // Check for a valid username address.
+        if (TextUtils.isEmpty(usernameStr)) {
+            username.error = getString(R.string.error_field_required)
+            focusView = username
             cancel = true
         }
 
         if (cancel) {
+            Logger.info("End-User error on login:${username.error} & ${password.error}")
             // There was an error; don't attempt login and focus the first
             // form field with an error.
             focusView?.requestFocus()
@@ -97,17 +91,13 @@ class LoginActivity : AppCompatActivity() {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
 //            println("starting background")
+            Logger.fine("starting progress bar")
             showProgress(true)
-            mAuthTask = UserLoginTask(emailStr, passwordStr)
+            Logger.fine("initializing and starting mAuthTask")
+            mAuthTask = UserLoginTask(usernameStr, passwordStr)
             mAuthTask!!.execute()
         }
     }
-
-    private fun isEmailValid(
-        email: String): Boolean = true//TODO
-
-    private fun isPasswordValid(password: String): Boolean = true//TODO
-
     /**
      * Shows the progress UI and hides the login form.
      */
@@ -158,7 +148,10 @@ class LoginActivity : AppCompatActivity() {
             //we can now assume that it has complected
             //check to see if the user exists
             //should block
-            val checkIfExists = String(AsyncPost().doInBackground("/account/exists/$username"))
+            val listOfIds = AsyncGet().doInBackground("/account/id/$username")
+
+
+            val checkIfExists = String(AsyncGet().doInBackground("/account/exists/$username"))
             if (checkIfExists == "true" || checkIfExists == "false") {
                 if (checkIfExists == "false") {
                     return Pair(false, Pair(Thing.USERNAME,"user not found"))
@@ -188,7 +181,7 @@ class LoginActivity : AppCompatActivity() {
             if(pair != null) {
                 if(!pair.first){
                     if(pair.second.first == Thing.USERNAME)
-                        email.error = pair.second.second
+                        findViewById<TextView>(R.id.username).error = pair.second.second
                     else
                         password.error = pair.second.second
                 }else {

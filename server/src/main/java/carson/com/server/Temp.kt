@@ -1,7 +1,8 @@
 package carson.com.server
 
+
 fun main(args: Array<String>) {
-    println(
-    putOrReplaceUser(createUser("joe","word".toByteArray()))
-    )
+    getDatabase().getCollection("users").insertOne(
+        createUser("joe","joe@gmail.com","pass".toByteArray()).toDocument())
+//    getDatabase().getCollection("etc").deleteOne(Filters.all("_id","snowflake"))
 }
