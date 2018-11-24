@@ -9,23 +9,16 @@ import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.widget.Button
 import android.widget.TextView
+import carson.com.chatapp.Logger
 import carson.com.chatapp.R
 import carson.com.chatapp.bind
-import java.io.PrintWriter
-import java.io.StringWriter
-
-const val ERROR_MESSAGE = "carson.com.chatapp.activities.ErrorActivity.ERROR_MESSAGE"
-
-
+import java.util.logging.Level
 class ErrorActivity :AppCompatActivity() {
-
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_error)
         val text : TextView by bind(R.id.error_text)
-        text.text = intent.getStringExtra(ERROR_MESSAGE)
+        text.text = Logger.getString(Level.ALL)
 
         findViewById<Button>(R.id.error_copy).setOnClickListener {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -36,15 +29,6 @@ class ErrorActivity :AppCompatActivity() {
 
 }
 
-fun crash(op: AppCompatActivity, error: String,exception: Exception? = null) {
-    var exception = exception
-    var error = error
-    if(exception != null) {
-        val sw = StringWriter()
-        val pw = PrintWriter(sw)
-        exception.printStackTrace(pw)
-        error = sw.toString() + "\n\n\n$error" // stack trace as a string
-    }
-    val intent = Intent(op, ErrorActivity::class.java).apply { putExtra(ERROR_MESSAGE, error) }
-    op.startActivity(intent)
-}
+fun crash(op :AppCompatActivity) {
+    op.startActivity(Intent(op, ErrorActivity::class.java))
+ }

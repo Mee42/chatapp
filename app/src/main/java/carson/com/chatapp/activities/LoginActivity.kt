@@ -16,7 +16,6 @@ import carson.com.chatapp.*
 import carson.com.utils.hash
 
 import kotlinx.android.synthetic.main.activity_login.*
-import java.util.concurrent.TimeUnit
 
 
 /**
@@ -30,6 +29,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+        Logger.fine("switched content view")
         // Set up the login form.
         password.setOnEditorActionListener(TextView.OnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
@@ -38,9 +38,19 @@ class LoginActivity : AppCompatActivity() {
             }
             false
         })
+        Logger.fine("set password listener")
         email_sign_in_button.setOnClickListener { attemptLogin() }
+        Logger.fine("set on click listener")
+        Logger.fine("Finished onCreate")
+        Logger.severe("ERROROROROR", exception = Exception())
+        Logger.finest("network exception at 123", exception = NetworkErrorException(NETWORK_EXCEPTION + NETWORK_EXCEPTION + NETWORK_EXCEPTION))
+
     }
 
+    override fun onStart() {
+        super.onStart()
+        crash(this)
+    }
 
     /**
      * Attempts to sign in or register the account specified by the login form.
@@ -93,7 +103,8 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun isEmailValid(email: String): Boolean = true//TODO
+    private fun isEmailValid(
+        email: String): Boolean = true//TODO
 
     private fun isPasswordValid(password: String): Boolean = true//TODO
 
@@ -142,8 +153,7 @@ class LoginActivity : AppCompatActivity() {
             if (!data.checkIfDone()) {
 //                println("is not done")
                 //is not done
-                if(!data.hangTillReturn(10 * 1000))
-                    throw NetworkErrorException("Timed out on start get")
+                data.hangTillReturn(10 * 1000)
             }
             //we can now assume that it has complected
             //check to see if the user exists

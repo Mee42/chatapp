@@ -76,11 +76,11 @@ class Server (port :Int){
 
         path("/account") {
             post("/exists/:username") {req,_ ->
-                data.getUser(req) != null
+                getUser(req) != null
             }
 
             post("/salt/:id/:username"){req,_ ->
-                val user = data.getUser(req)
+                val user = getUser(req)
                 if(user == null) {
                     halt(400, "User not found");return@post ""
                 }
@@ -92,7 +92,7 @@ class Server (port :Int){
                 var body = req.bodyAsBytes()
                 val id = data.Sparky().getId(req)
                 val session = data.Sparky().getSession(id)
-                val user:User? = data.getUser(req)
+                val user:User? = getUser(req.params("username"))
                 if(user == null){
                     halt(400,"could not find user with that username");
                 }
@@ -106,9 +106,6 @@ class Server (port :Int){
                 return@post "false".toByteArray().AESencrypt(session.key)
             }
         }//account
-
-        data.users+=User("bob","pass".toByteArray())
-
 
     }//init
 

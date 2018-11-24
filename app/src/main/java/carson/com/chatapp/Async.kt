@@ -2,12 +2,12 @@ package carson.com.chatapp
 
 import android.accounts.NetworkErrorException
 import android.os.AsyncTask
+import carson.com.chatapp.activities.crash
 import carson.com.utils.AESdecrypt
 import carson.com.utils.AESencrypt
 import carson.com.utils.combine
 import okhttp3.Request
 import okhttp3.RequestBody
-import java.util.concurrent.TimeUnit
 
 
 class AsyncGetEncryptionKey(val end :() -> Unit = {}) : AsyncTask<Unit, Unit, Pair<Int,ByteArray>>(){
@@ -29,11 +29,11 @@ class AsyncGetEncryptionKey(val end :() -> Unit = {}) : AsyncTask<Unit, Unit, Pa
         //attempt to verify key
 
         val randomBytes = ByteArray(16) { 0 }
-        val returnBytes = AsyncEncryptedPost(randomBytes,key).doInBackground("/start/$id/test")
-        if(!(randomBytes + ByteArray(1) {0}).contentEquals(returnBytes)){
+        val returnBytes = AsyncEncryptedPost(randomBytes, key).doInBackground("/start/$id/test")
+        if (!(randomBytes + ByteArray(1) { 0 }).contentEquals(returnBytes)) {
             throw SecurityException("attempt to verify key failed")
         }
-        return Pair(id,key)
+        return Pair(id, key)
     }
 
     override fun onPostExecute(result: Pair<Int, ByteArray>?) {
@@ -83,11 +83,6 @@ class AsyncInitKey() :AsyncTask<Unit,Unit,Unit>(){
         keySize
     }
 }
-/*
-decrypting����}6��dR��L=�  :  {-91, -107, -101, -93, 125, 14, 54, -79, -103, 100, 82, -67, -18, 76, 61, -95}
-got:����}6��dR��L=�  :  {-91, -107, -101, -93, 125, 14, 54, -79, -103, 100, 82, -67, -18, 76, 61, -95}}
-decrypting����}6��dR��L=�  :  {-91, -107, -101, -93, 125, 14, 54, -79, -103, 100, 82, -67, -18, 76, 61, -95}
- */
 
 fun getKeySizeNetworked() :Int {
     //println(("GETTING KEY")

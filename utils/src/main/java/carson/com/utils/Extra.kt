@@ -90,8 +90,8 @@ fun ByteArray.AESencryptChecked(key :ByteArray) :ByteArray =  key.AESencrypt(key
 
 fun ByteArray.AESdecrypt(key :ByteArray) :ByteArray {
 //    println("body:${String(this)}")
-    println("body:${decode()}")
-    println("key:${key.decode()}")
+//    println("body:${decode()}")
+//    println("key:${key.decode()}")
     val secretKey = SecretKeySpec(key.copyOf(), KEY_ALGO)
     val cipher = Cipher.getInstance(ALGORITHM)
     cipher.init(Cipher.DECRYPT_MODE, secretKey/*,IvParameterSpec(IV)*/)

@@ -2,6 +2,7 @@ package carson.com.server
 
 import carson.com.utils.hash
 import carson.com.utils.hashString
+import org.bson.Document
 import spark.Request
 import spark.Spark
 import java.lang.NumberFormatException
@@ -14,9 +15,6 @@ class Data{
     val sessions = mutableListOf<Session>()
     var running = true
 
-    fun getUser(username :String) :User? = users.firstOrNull { it.username == username }
-
-    fun getUser(req :Request) :User? = getUser(req.params("username"))
 
 
     /**
@@ -62,24 +60,36 @@ class Data{
 
 }
 
-class User {
-    var username :String
-    var passwordHash :ByteArray
-    val passwordSalt :ByteArray
+data class User(val username: String,val passwordHash: ByteArray,val passwordSalt: ByteArray) {
 
-    constructor(username: String, passwordHash: ByteArray, passwordSalt: ByteArray) {
-        this.username = username
-        this.passwordHash = passwordHash
-        this.passwordSalt = passwordSalt
+    constructor(doc: Document) : this(doc["_id"] as String, doc.getBytes("hash"), doc.getBytes("salt"))
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as User
+
+        if (username != other.username) return false
+        if (!passwordHash.contentEquals(other.passwordHash)) return false
+        if (!passwordSalt.contentEquals(other.passwordSalt)) return false
+
+        return true
     }
 
-    constructor(username :String, password: ByteArray){
-        this.username = username
-        this.passwordSalt = ByteArray(128) {0}
-        random.nextBytes(passwordSalt)
-        this.passwordHash = (password + passwordSalt).hash()
+    override fun hashCode(): Int {
+        var result = username.hashCode()
+        result = 31 * result + passwordHash.contentHashCode()
+        result = 31 * result + passwordSalt.contentHashCode()
+        return result
     }
 
+    fun toDocument(): Document {
+        return Document()
+            .append("_id",username)
+            .append("hash",passwordHash)
+            .append("salt",passwordSalt)
+    }
 }
 
 var index1 = 0

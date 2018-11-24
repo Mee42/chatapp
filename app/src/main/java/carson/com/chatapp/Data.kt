@@ -1,6 +1,7 @@
 package carson.com.chatapp
 
 import android.os.AsyncTask
+import java.util.concurrent.TimeUnit
 
 val data = Data()
 
@@ -25,9 +26,9 @@ class Data {
     }
 
 
-    public fun checkIfDone() :Boolean{
+    fun checkIfDone() :Boolean{
         val bool = startAuthObject.status == AsyncTask.Status.FINISHED
-        if(!bool)
+        if(!bool && startAuthObject.status != AsyncTask.Status.PENDING)
             return false
         if(id == null || connectionKey == null){//import if they are null
             val pair = startAuthObject.get()!!
@@ -38,24 +39,15 @@ class Data {
     }
 
 
-    public fun hangTillReturn(timeout :Long = 10_000): Boolean {
-        val startMs = System.currentTimeMillis()
-        while(!checkIfDone() && startMs + timeout > System.currentTimeMillis()){
-            Thread.sleep(10)
-        }
+    fun hangTillReturn(timeout :Long = 10_000): Boolean {
+        startAuthObject.get(timeout,TimeUnit.MILLISECONDS)
         return checkIfDone()
     }
 
 
 
 
-    private var startAuthObject = restartAuth()
-    private fun restartAuth() :AsyncGetEncryptionKey{
-        startAuthObject = AsyncGetEncryptionKey {
-            data.restartAuth()
-        }
-        return startAuthObject
-    }
+    private var startAuthObject = AsyncGetEncryptionKey()
 
     constructor(){
         startAuthObject.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
