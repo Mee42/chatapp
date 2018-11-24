@@ -1,4 +1,4 @@
-package carson.com.chatapp;
+package carson.com.utils;
 
 import java.util.logging.Level;
 

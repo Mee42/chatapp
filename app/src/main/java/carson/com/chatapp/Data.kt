@@ -1,12 +1,13 @@
 package carson.com.chatapp
 
 import android.os.AsyncTask
+import carson.com.utils.Logger
 import java.util.concurrent.TimeUnit
 
 val data = Data()
 
 /**
- * A singleton is kept in the above object. It should only be used per instance of server communication.
+ * A loginActivityInstance is kept in the above object. It should only be used per instance of server communication.
  * If the server does happen to disconnect during a client session, this object
  */
 class Data {
@@ -14,28 +15,24 @@ class Data {
     var id :Int? = null
 
     fun getId():Int{
-        if(id == null)
-            throw IllegalAccessException("can not access ID before async task returns. Call Data#CheckIfDone to make sure it is done.")
+        if(id == null) {
+            Logger.info("can not access ID before async task returns. Call Data#CheckIfDone to make sure it is done.")
+
+        }
         return id!!
     }
 
     fun getKey() :ByteArray{
-        if(connectionKey == null)
-            throw IllegalAccessException("can not access Key before async task returns. Call Data#CheckIfDone to make sure it is done.")
+        if(connectionKey == null) {
+            Logger.info("can not access Key before async task returns. Call Data#CheckIfDone to make sure it is done.")
+            hangTillReturn()
+        }
         return connectionKey!!
     }
 
 
     fun checkIfDone() :Boolean{
-        val bool = startAuthObject.status == AsyncTask.Status.FINISHED
-        if(!bool && startAuthObject.status != AsyncTask.Status.PENDING)
-            return false
-        if(id == null || connectionKey == null){//import if they are null
-            val pair = startAuthObject.get()!!
-            this.id = pair.first
-            this.connectionKey = pair.second
-        }
-        return true
+        return id != null && connectionKey != null
     }
 
 
@@ -47,7 +44,11 @@ class Data {
 
 
 
-    private var startAuthObject = AsyncGetEncryptionKey()
+    private var startAuthObject = AsyncGetEncryptionKey{key,id ->
+        Logger.fine("got key, storing in data")
+        data.connectionKey = key
+        data.id = id
+    }
 
     constructor(){
         startAuthObject.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)

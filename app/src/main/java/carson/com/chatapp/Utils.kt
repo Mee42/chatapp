@@ -1,10 +1,13 @@
 package carson.com.chatapp
 import android.app.Activity
+import android.os.AsyncTask
 import android.support.annotation.IdRes
 import android.view.View
+import carson.com.utils.Logger
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import java.util.*
-import java.util.logging.Logger
 
 
 fun <T : View> Activity.bind(@IdRes res : Int) : Lazy<T> {
@@ -15,8 +18,4 @@ fun <T : View> Activity.bind(@IdRes res : Int) : Lazy<T> {
 
 val client = OkHttpClient()
 const val url = "http://192.168.1.202:9999"
-val random = Random()//change to SecureRandom
-
-
-const val NETWORK_EXCEPTION = "Unable to connect to the server. This may be a problem with your internet, or the server might be down"
-
+val random = Random()//change to SecureRandom if need be (doubt)

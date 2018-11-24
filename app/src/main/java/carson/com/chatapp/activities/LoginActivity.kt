@@ -13,11 +13,17 @@ import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 
 import carson.com.chatapp.*
+import carson.com.utils.Logger
+import carson.com.utils.decode
+import carson.com.utils.gson
 import carson.com.utils.hash
 
 import kotlinx.android.synthetic.main.activity_login.*
+import java.lang.NumberFormatException
+import kotlin.NullPointerException
 
 
+lateinit var loginActivityInstance :LoginActivity
 /**
  * A login screen that offers login via username/password.
  */
@@ -27,6 +33,7 @@ class LoginActivity : AppCompatActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        loginActivityInstance = this
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
         Logger.fine("switched content view")
@@ -83,7 +90,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         if (cancel) {
-            Logger.info("End-User error on login:${username.error} & ${password.error}")
+            Logger.info("End-User error on login: ${username.error} & ${password.error}")
             // There was an error; don't attempt login and focus the first
             // form field with an error.
             focusView?.requestFocus()
@@ -105,6 +112,7 @@ class LoginActivity : AppCompatActivity() {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinnerexecuteOnExecutor.
+        Logger.fine(if (show) "starting" else "stopping" + " loading animation")
         val shortAnimTime = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
 
         login_form.visibility = if (show) View.GONE else View.VISIBLE
@@ -139,43 +147,60 @@ class LoginActivity : AppCompatActivity() {
     inner class UserLoginTask internal constructor(private val username: String, private val mPassword: String) :
         AsyncTask<Void, Void, Pair<Boolean, Pair<Thing,String>>>() {
         override fun doInBackground(vararg params: Void?): Pair<Boolean, Pair<Thing,String>> {
-//            println("starting login task")
+            Logger.fine("starting UserLoginTask")
             if (!data.checkIfDone()) {
-//                println("is not done")
+                Logger.finer("Key not generated yet")
                 //is not done
                 data.hangTillReturn(10 * 1000)
             }
             //we can now assume that it has complected
             //check to see if the user exists
             //should block
-            val listOfIds = AsyncGet().doInBackground("/account/id/$username")
-
-
-            val checkIfExists = String(AsyncGet().doInBackground("/account/exists/$username"))
-            if (checkIfExists == "true" || checkIfExists == "false") {
-                if (checkIfExists == "false") {
-                    return Pair(false, Pair(Thing.USERNAME,"user not found"))
-                }//else, continue the program
-            } else {
-                throw NetworkErrorException("Could not check if user exists, got:$checkIfExists")
+            Logger.fine("key:${data.connectionKey?.decode()}")
+            val existsString = String(AsyncGet().doInBackground("/account/id_for_username/$username"))
+            try{existsString.toLong()}catch(e :NumberFormatException){
+                Logger.warning("unable to parse $existsString to long",e)
+                crash(loginActivityInstance)
+                return Pair(false,Pair(Thing.USERNAME,"There was an error processing your request"))
             }
+            val checkIfExists = existsString != "-1"
+
+            if (!checkIfExists) {
+                Logger.info("User not found")
+                return Pair(false, Pair(Thing.USERNAME, "User not found"))
+            }
+
+            val userId = existsString.toLong()//has already been proven to work
+
+            try{
+                data.getKey()
+            }catch(e :NullPointerException){
+                Logger.severe("null on getting key",e)
+                crash(this@LoginActivity)
+                return Pair(false,Pair(Thing.PASSWORD,"crash"))
+            }
+
             //get salt
-            val salt = AsyncEncryptedPost(key = data.getKey()).doInBackground("/account/salt/${data.id}/$username")
+            val salt = AsyncEncryptedPost(key = data.getKey()).doInBackground("/account/salt/${data.id}/$userId")
             val hash = (mPassword.toByteArray() + salt).hash()
             val attemptLogin = AsyncEncryptedPost(hash, data.getKey())
-            val string = String(attemptLogin.doInBackground("/account/check/${data.id}/$username"))
+            val string = String(attemptLogin.doInBackground("/account/check/${data.id}/$userId"))
 //            val string = String(attemptLogin.get(10, TimeUnit.SECONDS))
             if (!(string == "true" || string == "false")) {
-                throw NetworkErrorException("Could not check if user exists, got:$checkIfExists")
+
+                Logger.network("Could not check if user exists, got:$checkIfExists",NetworkErrorException(""))
+                crash(loginActivityInstance)
+                return Pair(false,Pair(Thing.PASSWORD,"crash"))
             }
             if(string == "true"){
                 return Pair(true, Pair(Thing.PASSWORD,"success"))
             }else{
-                return Pair(false, Pair(Thing.PASSWORD,"incorrect password"))
+                return Pair(false, Pair(Thing.PASSWORD,"Incorrect password"))
             }
         }
 
         override fun onPostExecute(pair: Pair<Boolean, Pair<Thing,String>>?) {
+            Logger.fine("onPostExecute of login task: ${gson.toJson(pair)}")
             mAuthTask = null
             showProgress(false)
             if(pair != null) {
@@ -185,17 +210,17 @@ class LoginActivity : AppCompatActivity() {
                     else
                         password.error = pair.second.second
                 }else {
-                    val intent = Intent(baseContext,TestLoggedInActivity::class.java)
-                    startActivity(intent)
+                    Logger.severe("APPROVED LOGIN!!")
+                    crash(this@LoginActivity)
                 }
             }
 //            println("onPostExecute:${pair?.first}  :  ${pair?.second}")
         }
 
         override fun onCancelled() {
+            Logger.warning("Login canceled")
             mAuthTask = null
             showProgress(false)
-//            println("onCancelled")
         }
     }
 

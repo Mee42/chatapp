@@ -78,12 +78,11 @@ class Server (port :Int){
         path("/account") {
 
             get("/id_for_email/:email") {req,_ ->
-                getDatabase().getCollection("users").find(Filters.all("email",req.params("username"))).toList()
-                    .flatMap { listOf(it.getID()) }.fold("") {all,one-> "$all,$one"}.substring(1)//substring to remove the initial comma
+                getDatabase().getCollection("users").find(Filters.all("email",req.params(":email"))).toList().count()
             }
-            get("/id_for_username/:username") {req,_ ->
-                getDatabase().getCollection("users").find(Filters.all("username",req.params("username"))).toList()
-                    .flatMap { listOf(it.getID()) }.fold("") {all,one-> "$all,$one"}.substring(1)//substring to remove the initial comma
+
+            get("/id_for_username/:name") {req,_ ->
+                getDatabase().getCollection("users").find(Filters.all("username",req.params(":name"))).first()?.getID() ?: -1
             }
 
 
